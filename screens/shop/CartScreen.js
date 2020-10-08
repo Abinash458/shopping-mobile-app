@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet, Button } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 
 import Colors from '../../constants/Colors';
@@ -11,6 +11,8 @@ import * as orderActions from '../../store/actions/orderActions';
 
 const CartScreen = props => {
 
+    const [isLoading, setIsLoading] = useState(false);
+    // const [error, setError] = useState();
     const cartTotalAmount = useSelector(state => state.cart.totalAmount);
     const cartItems = useSelector(state => {
         const transformedCartItems = [];
@@ -30,18 +32,30 @@ const CartScreen = props => {
 
     const dispatch = useDispatch();
 
+    const sendOrderHandler = async () => {
+        setIsLoading(true);
+        await dispatch(orderActions.addOrder(cartItems, cartTotalAmount));
+        setIsLoading(false)
+    }
+
     return (
         <View style={styles.screen}>
             <Card style={styles.summary}>
                 <Text style={styles.summaryText}>Total: <Text style={styles.amount}>${Math.round(cartTotalAmount.toFixed(2) * 100) / 100}</Text></Text>
-                <Button
-                    color={Colors.secondaryColor}
-                    title="Order Now"
-                    disabled={cartItems.length === 0}
-                    onPress={() => {
-                        dispatch(orderActions.addOrder(cartItems, cartTotalAmount))
-                    }}
-                />
+                {isLoading ? (
+                    <ActivityIndicator
+                        size="small"
+                        color={Colors.primaryColor}
+                    />
+                ) : (
+                        <Button
+                            color={Colors.secondaryColor}
+                            title="Order Now"
+                            disabled={cartItems.length === 0}
+                            onPress={sendOrderHandler}
+                        />
+                    )}
+
             </Card>
             <FlatList
                 data={cartItems}
